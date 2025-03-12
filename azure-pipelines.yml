@@ -1,0 +1,52 @@
+---
+pool: Default
+
+variables:
+  - group: springpetcliniic 
+trigger:
+   - main 
+# pr:
+#   - main
+steps:
+    - task: Maven@4
+      inputs:
+        mavenPOMFile: 'pom.xml' 
+        goals: clean package
+        publishJUnitResults: true
+        testResultsFiles: '**/surefire-reports/TEST-*.xml'
+      displayName: 'Maven Compile '  
+        ##jdkVersionOption: '1.17'
+    - task: SonarCloudPrepare@3
+      inputs:
+        SonarCloud: SONAR_CLOUD
+        organization: '$(SONAR_ORGANIZATION)'
+        scannerMode: 'CLI'
+        configMode: 'manual'
+        cliProjectKey:  '$(SONAR_PROJECT_KEY)'
+        cliProjectName: '$(SONAR_PROJECT)'
+        cliProjectVersion: '1.0'
+        extraProperties:  |
+          sonar.java.binaries=target/classes
+          sonar.sources=src/main/java
+          sonar.tests=src/test/java
+          sonar.junit.reportPaths=target/surefire-reports
+          sonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml      
+      displayName: 'Prepare analysis on SonarCloud'
+    - task: Maven@4
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'verify sonar:sonar'
+        options: '-Dsonar.token=$(SONAR_TOKEN)'
+      displayName: 'Run SonarCloud Analysis'
+    - task: CopyFiles@2
+      inputs:
+        Contents: '**/spring-petclinic*.jar'
+        TargetFolder: $(Build.ArtifactStagingDirectory)
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: $(Build.ArtifactStagingDirectory)
+        artifactName: $(Build.Repository.name)
+    - task: SonarCloudPublish@3
+      inputs:
+        pollingTimeoutSec: '300'
+      displayName: 'Publish Quality Gate Result'
