@@ -26,42 +26,31 @@ stages{
 
  stage("Checkout from SCM"){
       steps{
-      git branch: 'master', credentialsId: 'github', url: 'https://github.com/gani1990/E-commerce-project-springBoot/'
+      git branch: 'master', credentialsId: 'github', url: 'https://github.com/gani1990/spring-petclinic-main/'
        }
     }
 
  stage("Build Application"){
       steps{
-        sh 'cd JtProject && mvn clean package'
+        sh 'mvn clean package'
       }
     }
 stage("Test Application"){
       steps{
        
-        sh 'cd JtProject && mvn test'
+        sh 'mvn test'
       }
 }
 
   stage("SonarQube Analysis"){
       steps{
-
         script{
-          withSonarQubeEnv('SonarCloud'){
-       sh '''
-              cd JtProject \
-              mvn clean verify sonar:sonar \
-              -Dsonar.qualitygate.wait=true \
-              -Dsonar.organization=gani1990 \
-              -Dsonar.projectKey=gani1990_e-commerce-ms \
-              -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.login=$SONAR_TOKEN 
-       '''
+          withSonarQubeEnv(credentialsId: 'jenkins-sonarqube-token'){
+         sh "mvn sonarqube:sonarqube"
           }
-        }
-          }
-      
-    }        
-
+      }
+    }                         
+  }  
   
 }
 }
