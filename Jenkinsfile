@@ -26,7 +26,7 @@ stages{
 
  stage("Checkout from SCM"){
       steps{
-      git branch: 'master', credentialsId: 'github', url: 'https://github.com/gani1990/spring-petclinic-main/'
+      git branch: 'main', credentialsId: 'github', url: 'https://github.com/gani1990/spring-petclinic-main/'
        }
     }
 
